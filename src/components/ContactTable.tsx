@@ -31,6 +31,7 @@ import { useQuery } from "@tanstack/react-query";
 // Export ref interface for parent component
 export interface ContactTableRef {
   handleBulkDelete: () => Promise<void>;
+  getSelectedContactsForEmail: () => Contact[];
 }
 
 interface Contact {
@@ -193,9 +194,14 @@ export const ContactTable = forwardRef<ContactTableRef, ContactTableProps>(({
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [meetingContact, setMeetingContact] = useState<Contact | null>(null);
 
-  // Expose handleBulkDelete to parent via ref
+  // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
-    handleBulkDelete
+    handleBulkDelete,
+    getSelectedContactsForEmail: () => {
+      return contacts.filter(
+        contact => selectedContacts.includes(contact.id) && contact.email
+      );
+    }
   }), [selectedContacts, contacts]);
 
   // Fetch all profiles for owner dropdown
