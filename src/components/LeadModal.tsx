@@ -5,12 +5,14 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCRUDAudit } from "@/hooks/useCRUDAudit";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LEAD_SOURCES } from "@/utils/leadStatusUtils";
 
 const leadSchema = z.object({
   lead_name: z.string()
@@ -33,15 +35,11 @@ interface Lead {
   id: string;
   lead_name: string;
   account_id?: string;
-  company_name?: string;
   position?: string;
   email?: string;
   phone_no?: string;
   linkedin?: string;
-  website?: string;
   contact_source?: string;
-  industry?: string;
-  country?: string;
   description?: string;
   lead_status?: string;
 }
@@ -51,6 +49,13 @@ interface Account {
   company_name: string;
 }
 
+interface LeadStatus {
+  id: string;
+  status_name: string;
+  status_color: string | null;
+  status_order: number;
+}
+
 interface LeadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -58,29 +63,37 @@ interface LeadModalProps {
   onSuccess: () => void;
 }
 
-const leadSources = [
-  "LinkedIn",
-  "Website",
-  "Referral", 
-  "Social Media",
-  "Email Campaign",
-  "Other"
-];
-
-const leadStatuses = [
-  "New",
-  "Attempted",
-  "Follow-up",
-  "Qualified",
-  "Disqualified"
-];
-
 export const LeadModal = ({ open, onOpenChange, lead, onSuccess }: LeadModalProps) => {
   const { toast } = useToast();
   const { logCreate, logUpdate } = useCRUDAudit();
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountSearch, setAccountSearch] = useState("");
+
+  // Fetch lead statuses from database
+  const { data: leadStatuses = [] } = useQuery({
+    queryKey: ['lead-statuses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lead_statuses')
+        .select('id, status_name, status_color, status_order')
+        .eq('is_active', true)
+        .order('status_order', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching lead statuses:', error);
+        // Fallback to default statuses
+        return [
+          { id: '1', status_name: 'New', status_color: '#3b82f6', status_order: 0 },
+          { id: '2', status_name: 'Attempted', status_color: '#f59e0b', status_order: 1 },
+          { id: '3', status_name: 'Follow-up', status_color: '#64748b', status_order: 2 },
+          { id: '4', status_name: 'Qualified', status_color: '#10b981', status_order: 3 },
+          { id: '5', status_name: 'Disqualified', status_color: '#ef4444', status_order: 4 },
+        ] as LeadStatus[];
+      }
+      return data as LeadStatus[];
+    },
+  });
 
   const form = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
@@ -383,7 +396,7 @@ export const LeadModal = ({ open, onOpenChange, lead, onSuccess }: LeadModalProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {leadSources.map((source) => (
+                        {LEAD_SOURCES.map((source) => (
                           <SelectItem key={source} value={source}>
                             {source}
                           </SelectItem>
@@ -409,8 +422,16 @@ export const LeadModal = ({ open, onOpenChange, lead, onSuccess }: LeadModalProp
                       </FormControl>
                       <SelectContent>
                         {leadStatuses.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
+                          <SelectItem key={status.id} value={status.status_name}>
+                            <div className="flex items-center gap-2">
+                              {status.status_color && (
+                                <span 
+                                  className="w-2 h-2 rounded-full" 
+                                  style={{ backgroundColor: status.status_color }}
+                                />
+                              )}
+                              {status.status_name}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>

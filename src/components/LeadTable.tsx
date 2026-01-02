@@ -35,6 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 // Export ref interface for parent component
 export interface LeadTableRef {
   handleBulkDelete: (deleteLinkedRecords?: boolean) => Promise<void>;
+  getSelectedLeadsForEmail: () => { id: string; name: string; email: string }[];
 }
 
 interface Lead {
@@ -439,9 +440,21 @@ const LeadTable = forwardRef<LeadTableRef, LeadTableProps>(({
     }
   };
 
-  // Expose handleBulkDelete to parent via ref
+  // Get selected leads for email
+  const getSelectedLeadsForEmail = () => {
+    return leads
+      .filter(lead => selectedLeads.includes(lead.id) && lead.email)
+      .map(lead => ({
+        id: lead.id,
+        name: lead.lead_name,
+        email: lead.email!,
+      }));
+  };
+
+  // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
-    handleBulkDelete
+    handleBulkDelete,
+    getSelectedLeadsForEmail
   }), [selectedLeads, leads]);
 
   const handleSelectAll = (checked: boolean) => {
