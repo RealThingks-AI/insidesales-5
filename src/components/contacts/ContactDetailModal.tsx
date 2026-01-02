@@ -18,6 +18,9 @@ import { ContactAssociations } from './ContactAssociations';
 import { EntityEmailHistory } from '@/components/shared/EntityEmailHistory';
 import { SendEmailModal } from '@/components/SendEmailModal';
 import { AccountDetailModalById } from '@/components/accounts/AccountDetailModalById';
+import { MeetingModal } from '@/components/MeetingModal';
+import { TaskModal } from '@/components/tasks/TaskModal';
+import { useTasks } from '@/hooks/useTasks';
 import { toast } from '@/hooks/use-toast';
 import {
   User,
@@ -36,6 +39,8 @@ import {
   History,
   Pencil,
   Link2,
+  CalendarPlus,
+  ListTodo,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -82,8 +87,12 @@ export const ContactDetailModal = ({
   const [showActivityLogModal, setShowActivityLogModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [accountName, setAccountName] = useState<string | null>(null);
+  
+  const { createTask, updateTask } = useTasks();
 
   useEffect(() => {
     if (contact) {
@@ -194,6 +203,24 @@ export const ContactDetailModal = ({
                     Update
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMeetingModal(true)}
+                  className="gap-2"
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                  Schedule Meeting
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTaskModal(true)}
+                  className="gap-2"
+                >
+                  <ListTodo className="h-4 w-4" />
+                  Create Task
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -443,6 +470,30 @@ export const ContactDetailModal = ({
         open={showAccountModal}
         onOpenChange={setShowAccountModal}
         accountId={contact.account_id || null}
+      />
+
+      <MeetingModal
+        open={showMeetingModal}
+        onOpenChange={setShowMeetingModal}
+        onSuccess={() => {
+          onUpdate?.();
+          setShowMeetingModal(false);
+        }}
+      />
+
+      <TaskModal
+        open={showTaskModal}
+        onOpenChange={setShowTaskModal}
+        onSubmit={async (data) => {
+          const result = await createTask({ ...data, contact_id: contact.id, module_type: 'contacts' });
+          if (result) {
+            onUpdate?.();
+            setShowTaskModal(false);
+          }
+          return result;
+        }}
+        onUpdate={updateTask}
+        context={{ module: 'contacts', recordId: contact.id, recordName: contact.contact_name }}
       />
     </>
   );
