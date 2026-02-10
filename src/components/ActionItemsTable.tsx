@@ -269,17 +269,20 @@ export function ActionItemsTable({
     field: 'status',
     label: 'Status',
     sortable: true,
-    width: columnWidths.status || 40
+    width: columnWidths.status || 40,
+    compact: true
   }, {
     field: 'priority',
     label: 'Priority',
     sortable: true,
-    width: columnWidths.priority || 40
+    width: columnWidths.priority || 40,
+    compact: true
   }, {
     field: 'module',
     label: 'Module',
     sortable: true,
-    width: columnWidths.module || 44
+    width: columnWidths.module || 44,
+    compact: true
   }, {
     field: 'actions',
     label: '',
@@ -290,18 +293,18 @@ export function ActionItemsTable({
       <Table>
         <TableHeader className="sticky top-0 z-10">
           <TableRow className="bg-muted/50 border-b-2 border-border">
-            {columns.map(col => <TableHead key={col.field} className={cn('relative text-sm font-bold bg-muted/50 py-3 px-3 h-11 text-foreground text-left', col.sortable && 'cursor-pointer hover:bg-muted/80', sortField === col.field && 'bg-accent', col.field === 'checkbox' && 'w-10', col.field === 'actions' && 'w-[60px] px-2')} style={{
+            {columns.map(col => <TableHead key={col.field} className={cn('relative text-sm font-bold bg-muted/50 py-3 h-11 text-foreground', col.compact ? 'px-1 text-center' : 'px-3 text-left', col.sortable && 'cursor-pointer hover:bg-muted/80', sortField === col.field && 'bg-accent', col.field === 'checkbox' && 'w-10', col.field === 'actions' && 'w-[60px] px-2')} style={{
             width: col.field === 'checkbox' || col.field === 'actions' ? undefined : `${col.width}px`,
             minWidth: col.field === 'title' ? '200px' : undefined
           }} onClick={() => col.sortable && onSort?.(col.field)}>
                 {col.field === 'checkbox' ? <div className="flex items-center justify-center h-full">
                     <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" className={someSelected ? 'data-[state=checked]:bg-primary' : ''} />
-                  </div> : col.label ? <div className="flex items-center gap-1">
+                  </div> : col.label ? <div className={cn('flex items-center gap-1', col.compact && 'justify-center')}>
                     {col.label}
-                    {col.sortable && getSortIcon(col.field)}
+                    {col.sortable && !col.compact && getSortIcon(col.field)}
                   </div> : null}
                 {/* Resize handle */}
-                {col.field !== 'checkbox' && col.field !== 'actions' && <div className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-primary/40 active:bg-primary/60" onMouseDown={e => handleMouseDown(e, col.field)} />}
+                {col.field !== 'checkbox' && col.field !== 'actions' && !col.compact && <div className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-primary/40 active:bg-primary/60" onMouseDown={e => handleMouseDown(e, col.field)} />}
               </TableHead>)}
           </TableRow>
         </TableHeader>
@@ -364,11 +367,11 @@ export function ActionItemsTable({
                 </TableCell>
 
                 {/* Status - dot only */}
-                <TableCell onClick={e => e.stopPropagation()} className="py-2 px-1 text-sm">
+                <TableCell onClick={e => e.stopPropagation()} className="py-2 px-1 text-sm text-center">
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div>
+                        <div className="flex justify-center">
                           <Select value={item.status} onValueChange={(value: ActionItemStatus) => onStatusChange(item.id, value)}>
                             <SelectTrigger className="h-7 w-7 min-w-0 text-sm border-0 bg-transparent hover:bg-muted/50 px-0 justify-center [&>svg]:hidden">
                               <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', status.dotColor)} />
@@ -408,11 +411,11 @@ export function ActionItemsTable({
                 </TableCell>
 
                 {/* Priority - dot only */}
-                <TableCell onClick={e => e.stopPropagation()} className="py-2 px-1 text-sm">
+                <TableCell onClick={e => e.stopPropagation()} className="py-2 px-1 text-sm text-center">
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div>
+                        <div className="flex justify-center">
                           <Select value={item.priority} onValueChange={(value: ActionItemPriority) => onPriorityChange(item.id, value)}>
                             <SelectTrigger className="h-7 w-7 min-w-0 text-sm border-0 bg-transparent hover:bg-muted/50 px-0 justify-center [&>svg]:hidden">
                               <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', priority.bgColor)} />
@@ -446,14 +449,14 @@ export function ActionItemsTable({
                 </TableCell>
 
                 {/* Module - icon only */}
-                <TableCell className="py-2 px-1 text-sm">
+                <TableCell className="py-2 px-1 text-sm text-center">
                   {item.module_id && linkedRecordName ? (
                     <TooltipProvider delayDuration={200}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             onClick={e => handleLinkedRecordClick(e, item.module_type, item.module_id!)}
-                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted/50 text-[#2e538e]"
+                            className="h-7 w-7 flex items-center justify-center rounded hover:bg-muted/50 text-[#2e538e] mx-auto"
                           >
                             {(() => {
                               const t = item.module_type.toLowerCase();
@@ -468,7 +471,7 @@ export function ActionItemsTable({
                       </Tooltip>
                     </TooltipProvider>
                   ) : (
-                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground flex justify-center">—</span>
                   )}
                 </TableCell>
 
