@@ -387,8 +387,6 @@ export const ListView = ({
           {/* Spacer */}
           <div className="flex-1" />
 
-          {headerActions}
-
           <DealActionsDropdown
             deals={deals}
             onImport={onImportDeals}
@@ -397,6 +395,8 @@ export const ListView = ({
             onColumnCustomize={() => setColumnCustomizerOpen(true)}
             showColumns={true}
           />
+
+          {headerActions}
         </div>
       </div>
 
