@@ -541,7 +541,7 @@ export const KanbanBoard = ({
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header with Search/Filter Bar - above divider */}
-      <div className="flex-shrink-0 border-b border-border bg-background px-6 py-3">
+      <div className="flex-shrink-0 border-b border-border bg-background px-6 h-16 flex items-center">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-[300px]">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />

@@ -349,7 +349,7 @@ export const ListView = ({
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Filter Bar - consistent with other modules */}
-      <div className="flex-shrink-0 border-b border-border bg-background px-6 py-3">
+      <div className="flex-shrink-0 border-b border-border bg-background px-6 h-16 flex items-center">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search - responsive width like Action Items */}
           <div className="relative flex-1 min-w-[200px] max-w-[300px]">
