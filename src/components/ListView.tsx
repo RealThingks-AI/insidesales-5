@@ -400,8 +400,8 @@ export const ListView = ({
         </div>
       </div>
 
-      {/* Content Area - single scroll container with always-visible scrollbar */}
-      <div className="flex-1 min-h-0 overflow-auto [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar-track]:bg-muted/30 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40" style={{ overflowX: 'scroll' }}>
+      {/* Content Area - single scroll container */}
+      <div className="flex-1 min-h-0 overflow-auto">
         <Table ref={tableRef} className="w-full">
           <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm z-20 border-b-2">
             <TableRow className="hover:bg-muted/60 transition-colors border-b">
