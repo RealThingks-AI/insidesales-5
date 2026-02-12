@@ -358,7 +358,7 @@ export const ListView = ({
               placeholder="Search all deal details..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 transition-all hover:border-primary/50 focus:border-primary"
+              className="pl-9 h-9 transition-all hover:border-primary/50 focus:border-primary"
             />
           </div>
           
