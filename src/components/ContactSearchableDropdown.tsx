@@ -74,7 +74,7 @@ export const ContactSearchableDropdown = ({
     }
   };
 
-  const filteredContacts = useMemo(() => {
+  const allFiltered = useMemo(() => {
     if (!searchValue) return contacts;
     const searchLower = searchValue.toLowerCase();
     return contacts.filter(c =>
@@ -84,6 +84,8 @@ export const ContactSearchableDropdown = ({
       c.position?.toLowerCase().includes(searchLower)
     );
   }, [contacts, searchValue]);
+
+  const filteredContacts = useMemo(() => allFiltered.slice(0, 50), [allFiltered]);
 
   const selectedContact = contacts.find(c => c.contact_name === value);
 
@@ -161,6 +163,11 @@ export const ContactSearchableDropdown = ({
                     </CommandItem>
                   ))}
                 </CommandGroup>
+                {allFiltered.length > 50 && (
+                  <div className="py-2 px-3 text-xs text-muted-foreground text-center border-t">
+                    Showing 50 of {allFiltered.length} contacts — type to narrow results
+                  </div>
+                )}
               </>
             )}
           </CommandList>
