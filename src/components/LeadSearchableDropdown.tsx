@@ -51,14 +51,23 @@ export const LeadSearchableDropdown = ({
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('leads')
-        .select('id, lead_name, company_name, country, created_by, lead_status')
-        .neq('lead_status', 'Converted') // Only show leads that haven't been converted to deals yet
-        .order('lead_name', { ascending: true });
-
-      if (error) throw error;
-      setLeads(data || []);
+      const PAGE_SIZE = 1000;
+      let allData: Lead[] = [];
+      let from = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('leads')
+          .select('id, lead_name, company_name, country, created_by, lead_status')
+          .neq('lead_status', 'Converted')
+          .order('lead_name', { ascending: true })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        allData = [...allData, ...(data || [])];
+        hasMore = (data?.length || 0) === PAGE_SIZE;
+        from += PAGE_SIZE;
+      }
+      setLeads(allData);
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast({
@@ -112,7 +121,7 @@ export const LeadSearchableDropdown = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
+        <Command shouldFilter={false} filter={() => 1}>
           <CommandInput 
             placeholder="Search leads..." 
             value={searchValue}

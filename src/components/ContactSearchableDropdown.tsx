@@ -46,13 +46,22 @@ export const ContactSearchableDropdown = ({
   const fetchContacts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('id, contact_name, company_name, email, phone_no, position, region, linkedin')
-        .order('contact_name', { ascending: true });
-
-      if (error) throw error;
-      setContacts(data || []);
+      const PAGE_SIZE = 1000;
+      let allData: ContactForDropdown[] = [];
+      let from = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('contacts')
+          .select('id, contact_name, company_name, email, phone_no, position, region, linkedin')
+          .order('contact_name', { ascending: true })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        allData = [...allData, ...(data || [])];
+        hasMore = (data?.length || 0) === PAGE_SIZE;
+        from += PAGE_SIZE;
+      }
+      setContacts(allData);
     } catch (error) {
       console.error("Error fetching contacts:", error);
       toast({
@@ -105,7 +114,7 @@ export const ContactSearchableDropdown = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} filter={() => 1}>
           <CommandInput
             placeholder="Search contacts..."
             value={searchValue}
