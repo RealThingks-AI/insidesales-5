@@ -17,6 +17,7 @@ interface Account {
 interface AccountSearchableDropdownProps {
   value?: string;
   onValueChange: (value: string) => void;
+  onAccountSelect?: (account: Account) => void;
   placeholder?: string;
   className?: string;
 }
@@ -24,6 +25,7 @@ interface AccountSearchableDropdownProps {
 export const AccountSearchableDropdown = ({
   value,
   onValueChange,
+  onAccountSelect,
   placeholder = "Select account...",
   className,
 }: AccountSearchableDropdownProps) => {
@@ -67,6 +69,7 @@ export const AccountSearchableDropdown = ({
 
   const handleSelect = (account: Account) => {
     onValueChange(account.account_name);
+    onAccountSelect?.(account);
     setOpen(false);
     setSearchValue("");
   };
@@ -99,7 +102,7 @@ export const AccountSearchableDropdown = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search accounts..."
             value={searchValue}
@@ -113,7 +116,9 @@ export const AccountSearchableDropdown = ({
               </div>
             ) : (
               <>
-                <CommandEmpty>No accounts found.</CommandEmpty>
+                {filteredAccounts.length === 0 && !loading && (
+                  <div className="py-6 text-center text-sm text-muted-foreground">No accounts found.</div>
+                )}
                 <CommandGroup>
                   {filteredAccounts.map((account) => (
                     <CommandItem
