@@ -1,43 +1,97 @@
 
 
-## Fix All Searchable Dropdown Bugs
+## Fix Account and Contact Dropdown Issues
 
-All three searchable dropdown components share the same two bugs that were partially fixed only in `ContactSearchableDropdown`. The Account and Lead dropdowns still have them.
+### Issue 1: Account Search -- Word-Based Normalized Search
 
-### Bug 1: Search returns "No [items] found" for existing records
-The `cmdk` library's internal filtering conflicts with custom filtering logic. Two fixes needed per component:
-- Add `shouldFilter={false}` to `<Command>` to disable cmdk's built-in filter
-- Replace `<CommandEmpty>` with a manual conditional check based on the filtered array length
+**File: `src/components/AccountSearchableDropdown.tsx`**
 
-### Bug 2: Dropdown width exceeds field size
-`LeadSearchableDropdown` uses `w-full` instead of `w-[--radix-popover-trigger-width]` on `PopoverContent`.
+Replace the current `filteredAccounts` logic (lines 59-68) with word-based normalized matching. This strips hyphens, dots, and other special characters before comparing, then checks that every word in the search query appears somewhere in the combined account fields.
 
-### Files and Changes
+```typescript
+const normalize = (s: string) =>
+  s.toLowerCase().replace(/[-_.,()]/g, ' ').replace(/\s+/g, ' ').trim();
 
-**1. `src/components/AccountSearchableDropdown.tsx`**
-- Line 105: Add `shouldFilter={false}` to `<Command>`
-- Lines 119: Replace `<CommandEmpty>No accounts found.</CommandEmpty>` with manual empty check:
-  ```tsx
-  {filteredAccounts.length === 0 && !loading && (
-    <div className="py-6 text-center text-sm text-muted-foreground">No accounts found.</div>
-  )}
-  ```
+const filteredAccounts = useMemo(() => {
+  if (!searchValue) return accounts;
+  const searchWords = normalize(searchValue).split(' ').filter(Boolean);
+  return accounts.filter((a) => {
+    const combined = normalize(
+      `${a.account_name || ''} ${a.region || ''} ${a.industry || ''}`
+    );
+    return searchWords.every((word) => combined.includes(word));
+  });
+}, [accounts, searchValue]);
+```
 
-**2. `src/components/LeadSearchableDropdown.tsx`**
-- Line 114: Change `PopoverContent` from `w-full` to `w-[--radix-popover-trigger-width]`
-- Line 115: Add `shouldFilter={false}` to `<Command>`
-- Line 129: Replace `<CommandEmpty>No leads found.</CommandEmpty>` with manual empty check:
-  ```tsx
-  {filteredLeads.length === 0 && !loading && (
-    <div className="py-6 text-center text-sm text-muted-foreground">No leads found.</div>
-  )}
-  ```
+This ensures "Harley Davidson" matches "Harley-Davidson Motor Company" and "Volvo Cars" matches "Volvo Car Corporation".
 
-**3. `src/components/ContactSearchableDropdown.tsx`** (already partially fixed)
-- Verify existing fixes are intact (shouldFilter, manual empty check, width) -- no changes expected.
+---
 
-### No Data Changes
-- No database records modified
-- No schema changes
-- Only UI component prop fixes
+### Issue 2: Dropdown Always Opens Below
+
+**Files: `AccountSearchableDropdown.tsx` (line 104) and `ContactSearchableDropdown.tsx` (line 126)**
+
+Add `side="bottom"` and `avoidCollisions={false}` to both `PopoverContent` components:
+
+```tsx
+<PopoverContent
+  className="w-[--radix-popover-trigger-width] p-0"
+  align="start"
+  side="bottom"
+  avoidCollisions={false}
+>
+```
+
+---
+
+### Issue 3: Multiple Contacts Show as Selected (Duplicate Names)
+
+**File: `src/components/ContactSearchableDropdown.tsx`**
+
+1. Add a `selectedContactId` optional prop and internal `selectedId` state (set on selection).
+2. Update checkmark logic from name-based to ID-based comparison:
+
+```typescript
+// Props addition
+interface ContactSearchableDropdownProps {
+  value?: string;
+  selectedContactId?: string;  // NEW
+  onValueChange: (value: string) => void;
+  onContactSelect?: (contact: Contact) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+// Internal state
+const [selectedId, setSelectedId] = useState<string | undefined>(selectedContactId);
+
+// On select
+const handleSelect = (contact: Contact) => {
+  onValueChange(contact.contact_name);
+  setSelectedId(contact.id);
+  onContactSelect?.(contact);
+  setOpen(false);
+  setSearchValue("");
+};
+
+// Checkmark: prefer ID match, fall back to name match
+(selectedId ? selectedId === contact.id : value === contact.contact_name)
+  ? "opacity-100" : "opacity-0"
+```
+
+3. Apply the same word-based normalized search as the Account dropdown.
+
+4. Add `shouldFilter={false}` to `<Command>` (currently missing -- causes cmdk to conflict with manual filtering).
+
+5. Replace `<CommandEmpty>` with manual empty check (same pattern as AccountSearchableDropdown).
+
+---
+
+### Summary
+
+| File | Changes |
+|------|---------|
+| `AccountSearchableDropdown.tsx` | Word-based normalized search; `side="bottom"` + `avoidCollisions={false}` on PopoverContent |
+| `ContactSearchableDropdown.tsx` | Word-based normalized search; `side="bottom"` + `avoidCollisions={false}`; `shouldFilter={false}` on Command; replace CommandEmpty with manual check; ID-based selection tracking with `selectedId` state and optional `selectedContactId` prop |
 
